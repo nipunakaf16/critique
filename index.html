@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Flights Connecting Australia to the World</title>
+  <script src="https://cdn.jsdelivr.net/npm/vega@5.30.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.20.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.26.0"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+    }
+    h1 {
+      text-align: center;
+      font-size: 3em;
+      margin-top: 20px;
+      color: #006DAE;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-weight: bold;
+      text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      text-align: center;
+      font-size: 1.8em;
+      margin-top: 40px;
+      color: #333;
+    }
+    .container {
+      width: 80%;
+      margin: 0 auto;
+      margin-bottom: 50px;
+      padding: 20px;
+      background-color: #fff;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+    .description {
+      text-align: center;
+      font-size: 1.2em;
+      color: #555;
+      margin-bottom: 20px;
+      padding: 0 20px;
+    }
+    .viz {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Main Heading -->
+  <h1>Flights Connecting Australia to the World</h1>
+
+  <!-- First Viz: Map Visualization -->
+  <div class="container">
+    <h2>Flight Routes Map</h2>
+    <p class="description">This map shows the connections between Australian cities and their international destinations. Select an airline to see specific routes and the number of flights between cities.</p>
+    <div class="viz">
+      <div id="map-visualization"></div>
+    </div>
+  </div>
+
+  <!-- Map Visualization -->
+  <script>
+    const mapSpec = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "width": 800,
+      "height": 500,
+      "background": "#b3e5fc",
+      "projection": {"type": "equalEarth"},
+      "params": [{
+        "name": "airlineSelector",
+        "value": "Qantas Airways",
+        "bind": {
+          "input": "select",
+          "options": [
+            "Qantas Airways",
+            "Cathay Pacific Airways",
+            "Garuda Indonesia",
+            "jetstar",
+            "Air New Zealand",
+            "Japan Airlines",
+            "Korean Air",
+            "Singapore Airlines",
+            "British Airways",
+            "Air China",
+            "Emirates",
+            "Malaysia Airlines"
+          ],
+          "name": "Select Airline: "
+        }
+      }],
+      "layer": [
+        {"data": {"graticule": {}}, "mark": {"type": "geoshape", "stroke": "white", "strokeWidth": 0.5}},
+        {"data": {"url": "https://vega.github.io/vega-datasets/data/world-110m.json", "format": {"type": "topojson", "feature": "countries"}}, "mark": {"type": "geoshape", "fill": "#fff9c4", "stroke": "#b2b2b2", "strokeWidth": 1}},
+        {"data": {"url": "https://raw.githubusercontent.com/nipunakaf16/dataset-for-viz/main/Fully_Cleaned_International_Airline_Activity_Data.csv"}, "transform": [{"filter": "datum.Airline == airlineSelector"}], "mark": {"type": "line", "strokeWidth": 2, "opacity": 0.8}, "encoding": {"longitude": {"field": "AUS_City_Long", "type": "quantitative"}, "latitude": {"field": "AUS_City_Lat", "type": "quantitative"}, "longitude2": {"field": "INT_City_Long", "type": "quantitative"}, "latitude2": {"field": "INT_City_Lat", "type": "quantitative"}, "color": {"field": "International_City", "type": "nominal", "scale": {"scheme": "category20"}}, "tooltip": [{"field": "Australian_City", "type": "nominal", "title": "Australian City"}, {"field": "International_City", "type": "nominal", "title": "Destination City"}, {"field": "All_Flights", "type": "quantitative", "title": "Number of Flights"}]}},
+        {"data": {"url": "https://raw.githubusercontent.com/nipunakaf16/dataset-for-viz/main/Fully_Cleaned_International_Airline_Activity_Data.csv"}, "transform": [{"filter": "datum.Airline == airlineSelector"}, {"aggregate": [{"op": "count", "as": "city_count"}], "groupby": ["Australian_City", "AUS_City_Long", "AUS_City_Lat"]}], "mark": {"type": "circle", "size": 30, "color": "red"}, "encoding": {"longitude": {"field": "AUS_City_Long", "type": "quantitative"}, "latitude": {"field": "AUS_City_Lat", "type": "quantitative"}, "tooltip": [{"field": "Australian_City", "type": "nominal", "title": "Departure City"}, {"field": "city_count", "type": "quantitative", "title": "Number of Flights"}]}},
+        {"data": {"url": "https://raw.githubusercontent.com/nipunakaf16/dataset-for-viz/main/Fully_Cleaned_International_Airline_Activity_Data.csv"}, "transform": [{"filter": "datum.Airline == airlineSelector"}, {"aggregate": [{"op": "count", "as": "city_count"}], "groupby": ["International_City", "INT_City_Long", "INT_City_Lat"]}], "mark": {"type": "circle", "size": 30, "color": "blue"}, "encoding": {"longitude": {"field": "INT_City_Long", "type": "quantitative"}, "latitude": {"field": "INT_City_Lat", "type": "quantitative"}, "tooltip": [{"field": "International_City", "type": "nominal", "title": "Arrival City"}, {"field": "city_count", "type": "quantitative", "title": "Number of Flights"}]}}
+      ],
+      "config": {"view": {"continuousWidth": 800, "continuousHeight": 500}}
+    };
+    vegaEmbed("#map-visualization", mapSpec, {mode: "vega-lite"});
+  </script>
+
+  <!-- Second Viz: Flights from Australia to Regions -->
+  <div class="container">
+    <h2>Flights from Australia to Regions</h2>
+    <p class="description">This bar chart shows the number of flights from Australia to different world regions. You can select the year to see how flight patterns have changed over time.</p>
+    <div class="viz">
+      <div id="stacked-bar-vis"></div>
+    </div>
+  </div>
+
+  <script>
+    const stackedBarSpec = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "width": 600,
+      "height": 400,
+      "data": {"url": "https://raw.githubusercontent.com/nipunakaf16/dataset-for-viz/main/Fully_Cleaned_International_Airline_Activity_Data.csv"},
+      "params": [{
+        "name": "yearSelection",
+        "value": 2003,
+        "bind": {"input": "range", "min": 2003, "max": 2022, "step": 1, "name": "Select Year: "}
+      }],
+      "transform": [{"filter": "datum.Year == yearSelection"}, {"filter": "datum.Airline == 'Qantas Airways' || datum.Airline == 'Cathay Pacific Airways' || datum.Airline == 'Garuda Indonesia' || datum.Airline == 'jetstar' || datum.Airline == 'Air New Zealand' || datum.Airline == 'Japan Airlines' || datum.Airline == 'Korean Air' || datum.Airline == 'Singapore Airlines' || datum.Airline == 'British Airways' || datum.Airline == 'Air China' || datum.Airline == 'Emirates' || datum.Airline == 'Malaysia Airlines'"}],
+      "mark": "bar",
+      "encoding": {
+        "x": {"field": "Service_Region", "type": "nominal", "axis": {"labelAngle": -45}},
+        "y": {"aggregate": "sum", "field": "All_Flights", "type": "quantitative", "title": "Total Flights"},
+        "color": {"field": "Airline", "type": "nominal"},
+        "tooltip": [{"field": "Airline", "type": "nominal", "title": "Airline"}, {"field": "Service_Region", "type": "nominal", "title": "Service Region"}, {"field": "All_Flights", "type": "quantitative", "aggregate": "sum", "title": "Total Flights"}]
+      }
+    };
+    vegaEmbed("#stacked-bar-vis", stackedBarSpec, {mode: "vega-lite"});
+  </script>
+
+  <!-- Third Viz: How Number of Seats Affects Number of Flights -->
+  <div class="container">
+    <h2>How Number of Seats Affects Number of Flights</h2>
+    <p class="description">This scatter plot visualizes the relationship between the maximum number of seats and the number of flights. Select a year to observe how this relationship changes over time.</p>
+    <div class="viz">
+      <div id="scatter-vis"></div>
+    </div>
+  </div>
+
+  <script>
+    const scatterSpec = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "width": 600,
+      "height": 400,
+      "data": {"url": "https://raw.githubusercontent.com/nipunakaf16/dataset-for-viz/main/Fully_Cleaned_International_Airline_Activity_Data.csv"},
+      "params": [{"name": "yearSelection", "value": 2022, "bind": {"input": "range", "min": 2003, "max": 2022, "step": 1, "name": "Select Year: "}}],
+      "transform": [{"filter": "datum.Year == yearSelection"}, {"filter": "datum.Airline == 'Qantas Airways' || datum.Airline == 'Cathay Pacific Airways' || datum.Airline == 'Garuda Indonesia' || datum.Airline == 'jetstar' || datum.Airline == 'Air New Zealand' || datum.Airline == 'Japan Airlines' || datum.Airline == 'Korean Air' || datum.Airline == 'Singapore Airlines' || datum.Airline == 'British Airways' || datum.Airline == 'Air China' || datum.Airline == 'Emirates' || datum.Airline == 'Malaysia Airlines'"}],
+      "mark": "point",
+      "encoding": {
+        "x": {"field": "Max_Seats", "type": "quantitative", "title": "Max Seats"},
+        "y": {"field": "All_Flights", "type": "quantitative", "title": "Number of Flights"},
+        "color": {"field": "Airline", "type": "nominal", "scale": {"scheme": "category10"}, "title": "Airline"},
+        "tooltip": [{"field": "Airline", "type": "nominal", "title": "Airline"}, {"field": "Max_Seats", "type": "quantitative", "title": "Max Seats"}, {"field": "All_Flights", "type": "quantitative", "title": "Number of Flights"}, {"field": "Year", "type": "quantitative", "title": "Year"}],
+        "size": {"field": "Max_Seats", "type": "quantitative", "title": "Max Seats"}
+      }
+    };
+    vegaEmbed("#scatter-vis", scatterSpec, {mode: "vega-lite"});
+  </script>
+
+</body>
+</html>
